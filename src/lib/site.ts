@@ -6,6 +6,21 @@
  *     whatsapp, phoneDisplay, email, address, mapsUrl, dan hours.
  */
 
+// URL situs dipakai metadataBase/sitemap/robots, yang membutuhkan URL absolut
+// yang valid (new URL() melempar error kalau string kosong / tanpa skema).
+// Nilai env yang salah tidak boleh membuat build gagal — kembali ke default.
+function resolveSiteUrl(raw: string | undefined): string {
+  const value = (raw ?? "").trim();
+  if (!value) return "http://localhost:3000";
+  const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+  try {
+    new URL(withScheme); // validasi
+    return withScheme.replace(/\/+$/, "");
+  } catch {
+    return "http://localhost:3000";
+  }
+}
+
 export const siteConfig = {
   name: "Toko Grosir Makmur",
   tagline: "Grosir sembako & kebutuhan rumah tangga",
@@ -28,8 +43,9 @@ export const siteConfig = {
     closed: "Minggu: Tutup",
   },
 
-  // Di Vercel: set NEXT_PUBLIC_SITE_URL ke domain final (metadata/OG/sitemap)
-  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+  // Di Vercel: set NEXT_PUBLIC_SITE_URL ke domain final (metadata/OG/sitemap).
+  // Kosong / salah format tidak akan merusak build — lihat resolveSiteUrl.
+  url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
 } as const;
 
 /** Jumlah pelanggan aktif (tampil di Hero) */
