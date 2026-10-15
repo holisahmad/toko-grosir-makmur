@@ -17,16 +17,41 @@ const PRODUCTION_FALLBACK_URL = "https://toko-grosir-makmur.vercel.app";
 // URL situs dipakai metadataBase/sitemap/robots, yang membutuhkan URL absolut
 // yang valid (new URL() melempar error kalau string kosong / tanpa skema).
 // Nilai env yang salah tidak boleh membuat build gagal — kembali ke default.
-function resolveSiteUrl(raw: string | undefined): string {
-  const value = (raw ?? "").trim();
-  if (!value) return PRODUCTION_FALLBACK_URL;
-  const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`;
+function isLocalUrl(value: string): boolean {
   try {
-    new URL(withScheme); // validasi
-    return withScheme.replace(/\/+$/, "");
+    const host = new URL(value).hostname;
+    return host === "localhost" || host.endsWith(".localhost") || host === "127.0.0.1";
   } catch {
-    return PRODUCTION_FALLBACK_URL;
+    return false;
   }
+}
+
+/**
+ * Urutan kandidat env: NEXT_PUBLIC_SITE_URL dulu, lalu env sistem Vercel.
+ * Saat build BERJALAN DI VERCEL (process.env.VERCEL), nilai localhost
+ * sengaja diabaikan — sitemap/OG/canonical di produksi tidak boleh
+ * menunjuk localhost, walau env berisi itu.
+ */
+function resolveSiteUrlFromEnv(): string {
+  const onVercel = process.env.VERCEL === "1";
+  const candidates = [
+    process.env.NEXT_PUBLIC_SITE_URL?.trim(),
+    process.env.VERCEL_PROJECT_PRODUCTION_URL?.trim(),
+  ];
+  for (const raw of candidates) {
+    if (!raw) continue;
+    const withScheme = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;
+    let url: string;
+    try {
+      new URL(withScheme); // validasi
+      url = withScheme.replace(/\/+$/, "");
+    } catch {
+      continue; // tidak valid, coba kandidat berikutnya
+    }
+    if (onVercel && isLocalUrl(url)) continue;
+    return url;
+  }
+  return PRODUCTION_FALLBACK_URL;
 }
 
 export const siteConfig = {
@@ -52,12 +77,9 @@ export const siteConfig = {
   },
 
   // Di Vercel: set NEXT_PUBLIC_SITE_URL ke domain final (metadata/OG/sitemap).
-  // Kosong / salah / belum diisi tidak merusak build — env sistem Vercel
+  // Kosong / salah / localhost tidak merusak build — env sistem Vercel
   // (VERCEL_PROJECT_PRODUCTION_URL) dipakai, dan terakhir domain produksi.
-  url: resolveSiteUrl(
-    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
-      process.env.VERCEL_PROJECT_PRODUCTION_URL,
-  ),
+  url: resolveSiteUrlFromEnv(),
 } as const;
 
 /** Jumlah pelanggan aktif (tampil di Hero) */
