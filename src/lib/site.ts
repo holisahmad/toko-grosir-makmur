@@ -44,8 +44,12 @@ export const siteConfig = {
   },
 
   // Di Vercel: set NEXT_PUBLIC_SITE_URL ke domain final (metadata/OG/sitemap).
-  // Kosong / salah format tidak akan merusak build — lihat resolveSiteUrl.
-  url: resolveSiteUrl(process.env.NEXT_PUBLIC_SITE_URL),
+  // Kosong / salah / belum diisi tidak merusak build — env sistem Vercel
+  // (VERCEL_PROJECT_PRODUCTION_URL) dipakai, dan terakhir default lokal.
+  url: resolveSiteUrl(
+    process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
+      process.env.VERCEL_PROJECT_PRODUCTION_URL,
+  ),
 } as const;
 
 /** Jumlah pelanggan aktif (tampil di Hero) */
