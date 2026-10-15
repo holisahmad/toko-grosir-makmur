@@ -1,4 +1,12 @@
 /**
+ * Fallback terakhir bila semua env tidak tersedia saat build.
+ * Dipakai domain produksi nyata (bukan localhost) agar sitemap/OG/canonical
+ * tetap benar di produksi walau env salah isian — untuk localhost dev,
+ * NEXT_PUBLIC_SITE_URL di .env.local tetap yang menang.
+ */
+const PRODUCTION_FALLBACK_URL = "https://toko-grosir-makmur.vercel.app";
+
+/**
  * SATU sumber data bisnis.
  * Ganti nilai di bawah ini saja — jangan hardcode WA/alamat/email di komponen.
  *
@@ -11,13 +19,13 @@
 // Nilai env yang salah tidak boleh membuat build gagal — kembali ke default.
 function resolveSiteUrl(raw: string | undefined): string {
   const value = (raw ?? "").trim();
-  if (!value) return "http://localhost:3000";
+  if (!value) return PRODUCTION_FALLBACK_URL;
   const withScheme = /^https?:\/\//i.test(value) ? value : `https://${value}`;
   try {
     new URL(withScheme); // validasi
     return withScheme.replace(/\/+$/, "");
   } catch {
-    return "http://localhost:3000";
+    return PRODUCTION_FALLBACK_URL;
   }
 }
 
@@ -45,7 +53,7 @@ export const siteConfig = {
 
   // Di Vercel: set NEXT_PUBLIC_SITE_URL ke domain final (metadata/OG/sitemap).
   // Kosong / salah / belum diisi tidak merusak build — env sistem Vercel
-  // (VERCEL_PROJECT_PRODUCTION_URL) dipakai, dan terakhir default lokal.
+  // (VERCEL_PROJECT_PRODUCTION_URL) dipakai, dan terakhir domain produksi.
   url: resolveSiteUrl(
     process.env.NEXT_PUBLIC_SITE_URL?.trim() ||
       process.env.VERCEL_PROJECT_PRODUCTION_URL,
