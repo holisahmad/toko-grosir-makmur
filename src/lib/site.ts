@@ -1,0 +1,55 @@
+/**
+ * SATU sumber data bisnis.
+ * Ganti nilai di bawah ini saja — jangan hardcode WA/alamat/email di komponen.
+ *
+ * ⚠️  NILAI DI BAWAH MASIH CONTOH. Ganti sebelum production:
+ *     whatsapp, phoneDisplay, email, address, mapsUrl, dan hours.
+ */
+
+export const siteConfig = {
+  name: "Toko Grosir Makmur",
+  tagline: "Grosir sembako & kebutuhan rumah tangga",
+  since: 2015,
+
+  // GANTI: format internasional tanpa "+" atau "0" di depan (contoh: 6281234567890)
+  whatsapp: "6281234567890",
+  phoneDisplay: "0812-3456-7890",
+  email: "info@tokogrosirmakmur.com",
+
+  address: "Jl. Raya Pasar No. 12, Jakarta Timur",
+  // GANTI: link Google Maps ke lokasi toko (dipakai footer)
+  mapsUrl: "https://maps.google.com/?q=Jl.+Raya+Pasar+No.+12+Jakarta+Timur",
+
+  // Area layanan yang tampil di Hero
+  area: "Jabodetabek",
+
+  hours: {
+    open: "Senin – Sabtu: 07.00 – 17.00",
+    closed: "Minggu: Tutup",
+  },
+
+  // Di Vercel: set NEXT_PUBLIC_SITE_URL ke domain final (metadata/OG/sitemap)
+  url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+} as const;
+
+/** Jumlah pelanggan aktif (tampil di Hero) */
+export const activeCustomers = "500+";
+
+/** Tahun berjalan sejak `since` — otomatis bertambah */
+export const yearsInBusiness = new Date().getFullYear() - siteConfig.since;
+
+// Tautan section memakai "/#..." (bukan "#...") supaya tetap benar
+// saat diklik dari halaman lain seperti /produk.
+export const navItems = [
+  { label: "Katalog", href: "/produk" },
+  { label: "Harga Grosir", href: "/#harga" },
+  { label: "Cara Order", href: "/#cara-order" },
+  { label: "FAQ", href: "/#faq" },
+] as const;
+
+export function waLink(message?: string) {
+  const base = `https://wa.me/${siteConfig.whatsapp}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
+}
+
+export const WA_ORDER_MESSAGE = "Halo, saya ingin order grosir";
